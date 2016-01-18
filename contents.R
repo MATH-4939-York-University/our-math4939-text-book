@@ -22,7 +22,7 @@
 #' 1. [Observational/Experimental data and Predictive/Causal Questions](Lies_Damned%20Lies.pdf)
 #'      * Your whole approach to statistical analysis differs completely based on the answers
 #'        to two questions: 1) Is the question about prediction or about causation? 2) Are the
-#'        data observational or experimental?
+#'        data observational or experimental with random assignment to levels of X?
 #' 2. [Simple Sample R Markdown file] LINK TO COME
 #' 3. [Sample Regression Analyses with Graphs and GLH](Exploring_Regression_GLH.html)  [R Script](Exploring_Regression_GLH.R) 
 #'      * Basics of linear models in R, regression diagnostics, linear hypotheses. Graphic exploration.
