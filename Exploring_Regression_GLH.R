@@ -8,7 +8,7 @@
 #'      toc_depth: 6
 #' ---
 #' Generated:
-{{format(Sys.time(), '%H:%M %d %B %Y')}}
+{{format(Sys.time(), '%B %d, %Y %H:%M')}}
 #' <!-- This is an example of an invisible note in HTML.
 #' (Unfortunately this trick doesn't work for pdf files.)
 #' To Do: Reorganize GLH and add graphs to illustrate
