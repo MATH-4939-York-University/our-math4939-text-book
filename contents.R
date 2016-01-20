@@ -24,17 +24,23 @@
 #'        to two questions: 1) Is the question about prediction or about causation? 2) Are the
 #'        data observational or experimental with random assignment to levels of X?
 #' 2. [Simple Sample R Markdown file] LINK TO COME
-#' 3. [Sample Regression Analyses with Graphs and GLH](Exploring_Regression_GLH.html)  [R Script](Exploring_Regression_GLH.R) 
+#' 3. [Sample Regression Analyses with Graphs and GLH](Exploring_Regression_GLH.html) ***|*** [R Script](Exploring_Regression_GLH.R) 
 #'      * Basics of linear models in R, regression diagnostics, linear hypotheses. Graphic exploration.
 #' 
 #' ## Chapter 2: The Meaning of Regression
 #' 
-#' 1. Add parts 1 and 2 of understanding regression.
+#' 1. [Visualizing Regression Part I: Simple Regression](Visualizing_Regression-I-Simple.pdf) 
+#' 2. [Visualizing Regression Part II: Multiple Regression](Visualizing_Regression-II-Multiple.pdf) 
 #' 
 #' ## Appendix 1: Comments on R and SAS textbook
 #' 
 #' These comments are organized by chapter and section of R and SAS
 #' 
 #' 1. [Chapter 2](RandSAS_Chapter02.html)
+#' 
+#' ## Appendix 2: Material in Progress
+#' 
+#' 1. [Selected Warwick Exercises](Selected_Warwick_Exercises.html)
+#' 2. [General Parametric Splines](Part%205%20General%20Parametric%20Splines-notes%202014%2011%2005.pdf)
 #'         
 

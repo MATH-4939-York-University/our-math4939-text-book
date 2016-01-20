@@ -287,7 +287,7 @@ hs$prop.female <- with(hs, capply( Sex == "Female", school, mean, na.rm = T))
 
 head(up(hs, ~ school))
 #'
-#' If all you need are means of numeric variables within cluster
+#' If all you need are means of numeric variables within clusters
 hs.us <- up(hs, ~ school, all = T)
 #' Note that this returns modes for categorical variables, which is not
 #' generally very useful.
