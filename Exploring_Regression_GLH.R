@@ -15,7 +15,7 @@
 #' Use gpanel.fit
 #' 
 #' History:
-#' - 2016-01-15: First version
+#' - 2016-01-15: First version 
 #' -->
 #' 
 #' ## Introduction
