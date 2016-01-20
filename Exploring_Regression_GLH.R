@@ -256,7 +256,7 @@ Fit3d(fitq) # shows how quads don't extrapolate here
 #' 4. How should we handle the large standard deviation of residuals at the higher levels of predicted incomes?
 #'    - transform the response? e.g. log(income) which would allow us to estimate the proportional
 #'      'effect' of a change in x. 
-#'    - 
+#'    - modify the model so it adapts to heteroscedasticity.
 #' 5. Should we simplify the model?
 #'
 xyplot( income ~ education | cut(women,5), Prestige, groups = type)
@@ -293,7 +293,8 @@ xyplot( income ~ education | cut(women,c(-1,0,5,10,25,101)),
   layer(panel.lmline(..., lwd = 2))+
   glayer(panel.lmline(..., col = 'blue', lty=3))
 
-  
+#'
+#' ## Using Generalized Least Squares    
 #'
 #' We will use the 'gls' (generalized least-squares) 
 #' function in the 'nlme' package to incorporate 
@@ -393,6 +394,9 @@ summary(fit3q)
 #' 5. an interaction between two categorical variables
 #' 6. an interaction of a variable with itself: e.g. 'women * women', or 'women^2'
 #'
+#'
+#' ### Mathematical formula for a model
+#'
 #' To interpret coefficients, we need to be able to write the mathematical
 #' prediction formula that corresponds to the model formula. 
 #' 
@@ -418,6 +422,8 @@ getX(fit3q) %>% head
 #' Note that 'blue collar' is the *reference level*, i.e. the one that occupation type that correspondss to
 #' $T_p = T_w = 0$.  With factors in R, the reference level is the first level of the factor, e.g.
 levels(Prestige$type)
+#'
+#' ### General Linear Hypotheses and Estimators using Wald Tests  
 #'
 #' Once we express the formula mathematically, it is easy to see how we could use the model to 
 #' ask all sorts of questions. For example, what is the increase in income associated with an increase in
@@ -713,14 +719,10 @@ xyplot( income.fit3 ~ education | Women,
         scales = list(y=list(alternating=F)),
         as.table = TRUE)
 
-
-
-
-
 #'
 #' # What is the 'value' of an additional year of education?
 #' 
-#' ## Using GLH (to come)
+#' ## Using GLH and graphs to probe complex questions (INCOMPLETE)
 #' 
 #' Using GLH we will be able to, among other things:
 #' 

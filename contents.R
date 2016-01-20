@@ -27,9 +27,14 @@
 #' 3. [Sample Regression Analyses with Graphs and GLH](Exploring_Regression_GLH.html)  [R Script](Exploring_Regression_GLH.R) 
 #'      * Basics of linear models in R, regression diagnostics, linear hypotheses. Graphic exploration.
 #' 
-#' ## The Meaning of Regression
+#' ## Chapter 2: The Meaning of Regression
 #' 
 #' 1. Add parts 1 and 2 of understanding regression.
 #' 
-#' ## Chapter X:    
+#' ## Appendix 1: Comments on R and SAS textbook
+#' 
+#' These comments are organized by chapter and section of R and SAS
+#' 
+#' 1. [Chapter 2](RandSAS_Chapter02.html)
+#'         
 
