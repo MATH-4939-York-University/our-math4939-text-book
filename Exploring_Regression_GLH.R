@@ -15,7 +15,7 @@
 #' Use gpanel.fit
 #' 
 #' History:
-#' - 2016-01-15: First version 
+#' - 2016-01-15: First version
 #' -->
 #' 
 #' ## Introduction
@@ -122,12 +122,12 @@ opts_chunk$set(tidy=FALSE,comment='  ',fig.height=8,fig.width=10)
 #'    to make an output file 
 #' -->
 #+ eval=FALSE
-install.packages("<name of package>") 
+# install.packages("<name of package>") 
 # where you substitute the <name of the package> to install
 #' Much of the really interesting work in R uses specialized packages. 
 #' 'Mature' packages are usually uploaded to 'CRAN' and can be installed with, for example:
 #+ eval=FALSE
-install.packages('car')
+# install.packages('car')
 #' Many 'maturing' packages are incubated by their authors on GitHub and
 #' can be installed (after having installed the 'devtools' package) with,
 #' for example:
@@ -135,7 +135,11 @@ install.packages('car')
 devtools::install_github('gmonette/yscs')
 #' Once a package is installed, you use it in an R session with the
 #' 'library' function.
-#'  
+#'
+#' If a package is undergoing frequent changes, as is the case for the 'yscs'
+#' package, it's a good idea to reinstall it frequently.  To reinstall a 
+#' package, you should install it ***before*** loading it with 'library(<name of package>)'.
+#'     
 #' Here are the packages we will need for this script.
 #' Note that you can install each package anywhere in the script before
 #' you actually need to use the functions or data in the package.
@@ -336,8 +340,32 @@ plot(fit, id = .1, idLabels = ~ occ)  # default not as much as with 'lm' but fit
 #'
 fit2 <- gls(income ~ education * women * type, Prestige, 
             weights = varPower(form = ~fitted(.)),
-            na.action = na.omit)
+            na.action = na.omit,
+            method = "ML")
 summary(fit2)
+wald(fit2, "women")
+
+# refit with only education
+fit2e <- gls(income ~ education , Prestige, 
+            weights = varPower(form = ~fitted(.)),
+            na.action = na.omit,
+            method = "ML")
+summary(fit2e)
+# anova(fit2, fit2e) # should give LRT but doesn't because different y's due to missing 'type's
+#'
+#' Wald test to test the hypothesis that all coefficients except the intercept
+#' and the 'main effect' of education can be set to 0
+#' 
+length(coef(fit2))
+wald(fit2,3:12) 
+#'
+#' ***Note:*** None of the individual terms are significant, yet, together they are
+#' hugely significant.
+#' 
+#' None of the terms involving 'women' are significant. Could we remove them all?
+#' 
+wald(fit2,'women') # uses regular expression to select terms to test 
+#'
 plot(fit2, id = .05, idLabels = ~ occ) # standardized residuals divided by estimated standard deviation
 plot(fit2, resid(., type = 'p') ~ resid(., type = 'response'), 
      xlab = 'raw residual',
@@ -427,15 +455,24 @@ levels(Prestige$type)
 #'
 #' Once we express the formula mathematically, it is easy to see how we could use the model to 
 #' ask all sorts of questions. For example, what is the increase in income associated with an increase in
-#' education for a professional occupation that has no women? It is
+#' education for a professional occupation that has no women? It is the ***partial derivative*** of 
+#' $\operatorname{E}(Y|W,E,T)$ with respect to $E$:
 #' 
-#' \[\frac{d}{{dE}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}}\]
+#' \[\frac{\partial}{{\partial E}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}}\]
 #' 
-#' which we can find by differentiating with respect to $E$ and and setting $W=0$, $T_p = 1$ and $T_w = 0$ in the 
-#' the result:
+#' This, in general, will be a function of $W$, $E$ and $T$. So, for example, the association of
+#' income with education for a professional male occupation is:
+#' 
+#' \[\frac{\partial}{{\partial E}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}}\]
+#'
+#' which may depend on $E$.
+#' 
+#' Thus there isn't a single number that describes the 'effect' of education. The 'effect' depends on the
+#' context. We can estimate the coefficient for this association by differentiating with respect to 
+#' $E$ and and setting $W=0$, $T_p = 1$ and $T_w = 0$:
 #'
 #' \[\begin{aligned}
-#' \frac{d}{{dE}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}} =  
+#' \frac{\partial}{{\partial E}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}} =  
 #' & {\beta _3} + 2{\beta _5}E + {\beta _7}W \\
 #' &  + {\beta _8}{T_p} + {\beta _9}{T_w} + 2{\beta _{12}}{T_p}E + 2{\beta _{13}}{T_w}E \\ 
 #' &  + {\beta _{16}}{T_p}W + {\beta _{17}}{T_w}W \\
@@ -443,7 +480,7 @@ levels(Prestige$type)
 #' 
 #' We estimate this using the 'General Linear Hypothesis' as a linear combination of the vector of $\beta$s.
 #' 
-#' Suppose we want to estimate the 'value of an extra year' when $E = 10$, we find 
+#' For example, to estimate the 'value of an extra year' when $E = 10$, we find 
 #' \[ \hat{\eta} = L \hat{\beta} = \left[ {\begin{array}{*{20}{c}}
 #' 0&0&0&1&0&{20}&0&0&1&0&0&0&20&0&0&0&0&0 
 #' \end{array}} \right]\left[ {\begin{array}{*{20}{c}}
@@ -470,7 +507,7 @@ levels(Prestige$type)
 #' To estimate the variance of $\hat{\eta}$ we use $L \hat{Var}(\hat{\beta}) L'$.
 #'
 #' In R, we can do this with matrix multiplication:
-L <- rbind(c(0,0,0,1,0,20,0,0,1,0,0,0,20,0,0,0,0,0))
+L <- rbind("assoc. with Educ | male prof. E=10" = c(0,0,0,1,0,20,0,0,1,0,0,0,20,0,0,0,0,0))
 L
 #' With a 'gls' fit, we extract $\hat{\beta}$ with:
 coef(fit3q)  
@@ -483,13 +520,28 @@ wald(fit3q, L)
 #'
 #' What could be happening?
 #' 
+#' We could explore the association with education for various values of E, W and T by
+#' building a larger L matrix. e.g.
+#' 
+L <- rbind(
+  'male prof E=10' = c(0,0,0,1,0,20,0,0,1,0,0,0,20,0,0,0,0,0),
+  'male prof E=12' = c(0,0,0,1,0,24,0,0,1,0,0,0,24,0,0,0,0,0),
+  'male prof E=14' = c(0,0,0,1,0,28,0,0,1,0,0,0,28,0,0,0,0,0),
+  'male prof E=16' = c(0,0,0,1,0,32,0,0,1,0,0,0,32,0,0,0,0,0))
+wald(fit3q,L)
+#'
+#' But this would be extremely laborious.
+#'  
 #' Let's see the fitted model for various combination of education, women and type
+#' 
+#' First, create a data frame with the combinations for which we want to estimate the fit:
 #' 
 pred <- expand.grid(women = seq(0,100,20), education = seq(6,18,.2), type = levels(Prestige$type))
 #' 'pred' is a data frame with the Cartesian product of its arguments
 dim(pred)
 head(pred,10)
 tail(pred,10)
+#' Now we add predicted income using our model:
 pred$income.pred <- predict(fit3q, newdata = pred)
 xyplot(income.pred ~ education | type, pred, groups = women, type = 'l')
 xyplot(income.pred ~ education | type, pred, groups = women, type = 'l', 
@@ -501,7 +553,7 @@ xyplot(income.pred ~ education | type, pred, groups = women, type = 'l',
 #'
 #' Estimating the 'value of education':
 #' 
-#' We print a list of expressions that generates block of the X matrix:
+#' We print a list of expressions that generates a block of the X matrix:
 #' 
 Lfx(fit3q)
 #'
