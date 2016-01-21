@@ -352,20 +352,30 @@ fit2e <- gls(income ~ education , Prestige,
             method = "ML")
 summary(fit2e)
 # anova(fit2, fit2e) # should give LRT but doesn't because different y's due to missing 'type's
+fit2er <- update(fit2e, data = getData(fit2))  # refit to use same data
 #'
-#' Wald test to test the hypothesis that all coefficients except the intercept
-#' and the 'main effect' of education can be set to 0
+#' Likelihood ratio test for dropping all terms except main effect of education:
+#'
+anova(fit2, fit2er)
+#'
+#' Wald test to test if we 'can drop' all but main effect of education
 #' 
+wald(fit2,"Intercept|^education$", invert = T)
+#' or
+wald(fit2,":|type|women")
+#' or
 length(coef(fit2))
 wald(fit2,3:12) 
 #'
-#' ***Note:*** None of the individual terms are significant, yet, together they are
+#' ***Note:*** None of the individual terms are highly significant, yet, together they are
 #' hugely significant.
 #' 
-#' None of the terms involving 'women' are significant. Could we remove them all?
+#' None of the terms involving 'women' are highly significant. Could we remove them all?
 #' 
-wald(fit2,'women') # uses regular expression to select terms to test 
-#'
+wald(fit2,'women') 
+#' 
+#' Some diagnostics:
+#' 
 plot(fit2, id = .05, idLabels = ~ occ) # standardized residuals divided by estimated standard deviation
 plot(fit2, resid(., type = 'p') ~ resid(., type = 'response'), 
      xlab = 'raw residual',
@@ -447,8 +457,8 @@ getX(fit3q) %>% head
 #' \end{aligned} \]
 #' 
 #' where ${T_p} = 1$ if the occupation type is 'professional' and 0 otherwise and, similary for $T_w$ and 'white collar'.
-#' Note that 'blue collar' is the *reference level*, i.e. the one that occupation type that correspondss to
-#' $T_p = T_w = 0$.  With factors in R, the reference level is the first level of the factor, e.g.
+#' Note that 'blue collar' is the *reference level*, i.e. the occupation type that corresponds to
+#' $T_p = T_w = 0$.  With factors in R, the reference level is the first level of the factor. Consider:
 levels(Prestige$type)
 #'
 #' ### General Linear Hypotheses and Estimators using Wald Tests  
@@ -458,7 +468,7 @@ levels(Prestige$type)
 #' education for a professional occupation that has no women? It is the ***partial derivative*** of 
 #' $\operatorname{E}(Y|W,E,T)$ with respect to $E$:
 #' 
-#' \[\frac{\partial}{{\partial E}}\operatorname{E} (Y|W,E,T{\left. ) \right|_{W = 0;T = p}}\]
+#' \[\frac{\partial}{{\partial E}}\operatorname{E} (Y|W,E,T)\]
 #' 
 #' This, in general, will be a function of $W$, $E$ and $T$. So, for example, the association of
 #' income with education for a professional male occupation is:
@@ -467,7 +477,11 @@ levels(Prestige$type)
 #'
 #' which may depend on $E$.
 #' 
-#' Thus there isn't a single number that describes the 'effect' of education. The 'effect' depends on the
+#' Thus, except in a simple additive model linear in the predictors,
+#' there isn't a single number that describes the 'effect' 
+#' of education, i.e. the conditional association of income with
+#' education. 
+#' The 'effect' depends on the
 #' context. We can estimate the coefficient for this association by differentiating with respect to 
 #' $E$ and and setting $W=0$, $T_p = 1$ and $T_w = 0$:
 #'
@@ -530,7 +544,9 @@ L <- rbind(
   'male prof E=16' = c(0,0,0,1,0,32,0,0,1,0,0,0,32,0,0,0,0,0))
 wald(fit3q,L)
 #'
-#' But this would be extremely laborious.
+#' But this would be extremely laborious. 
+#' 
+#' '''Exam or test question: Why is the number of degrees of freedom for the numerator equal to 2 although there are 4 rows in the L matrix?'''
 #'  
 #' Let's see the fitted model for various combination of education, women and type
 #' 
@@ -577,13 +593,22 @@ Led <- Lfx(
   pred)
 dim(Led)
 head(Led)
+tail(Led)
+#' 
+#' To get predicted values with 'Led', we can use 'walddf':
+ww <- walddf(fit3q, Led)
+#' The warning message is triggered by the fact that the dimension
+#' of the model is equal to the number of linearly independent
+#' columns of 'X', namely `r ncol(Led)`
+#' but the number of rows is `r nrow(Led)`.
 #'
 #' The list of expressions can be edited easily to differentiate with
 #' respect to a continuous variable.
 #'
 #' To get the value of education, differentiate each term with respect to education.
 #' Leave expression of the form 'M(...)' as is because they generate blocks
-#' of the right size for factors. Also, products of 'M' objects generate the
+#' of the right size for factors. Also, products of 'M' 
+#' objects generate the
 #' columns of the X matrix for interaction terms.
 #' 
 Led.deriv <- Lfx(fit3q,
@@ -611,23 +636,156 @@ xyplot( coef ~ education | type, ed.deriv, groups = women, type = 'l',
   layer(panel.abline(h=0))
 #'
 #' Most of the individual coefficients answer questions that are of little 
-#' interest because they are ***marginal*** to other terms. e.g. dropping a non-significant intercept
+#' interest because they are ***marginal*** to other terms.
+#' For example, dropping a non-significant intercept
 #' just forces the model to go through the origin which, generally, would be
-#' a completely unjustified arbitrary restriction on the model
+#' a completely unjustified arbitrary restriction on the model.
 #' 
-#' Dropping a main effect, e.g. 'women' that also appears in an interactionExample of 'marginal' terms that should **almost never**
-#'    be dropped:
-#'    1. any term that is also included in a higher-order interaction
-#'    2. any term in a polynomial except the highest order term
-#'    3. the intercept which we can think of as being 'included' in all other terms
-#'    
+#' We only want to drop non-significant terms that make sense to drop.
+#' 
+#' There are a number of approaches to simplifying a linear model. How to 
+#' proceed depends crucially on the purpose of the analysis and on the nature
+#' of the data. Four characteristic situations are:
+#' 
+#' 1. The purpose is a predictive model based on observational data and 
+#'    prediction will be done for case that can be thought of as coming from
+#'    the same population as that of observed data: Many of the traditional
+#'    techniques are reasonable in this situation.  Of course you should 
+#'    only include variables that will actually be available for prediction.
+#'    A highly significant predictor is useless if it won't be available. Also,
+#'    the 'best' prediction model should take the relative cost of obtaining
+#'    variables into account, not merely their statistical significance or
+#'    their unpenalized predictive power.
+#' 2. The purpose is causal inference based on an experiment with 
+#'    randomly assigned levels of a treatment variable: You can look for
+#'    potential moderators if the sample size permits it. Be careful not
+#'    to include any post-randomization variables when addressing the causal
+#'    question: does X cause Y?  You may include post-randomization variables
+#'    when looking for potential mediators of the effect of X on Y. The roles
+#'    of pre-randomization variables are only to potentially reduce variance
+#'    and to explore whether the effect of X is different for different 
+#'    levels of the variable, i.e. moderation, also known as interaction
+#'    effects.
+#' 3. Causal inference with observational data: This is perhaps the most common
+#'    and important but the most difficult situation. You hope to include
+#'    potential confounders modeled adequately to 'unconfound' the effect of
+#'    X.  Some important confounders, if they are strongly related to X may not
+#'    be significant, yet dropping them might invalidate the interpretation
+#'    of the coefficient of X as causal.  It is equally important to exclude
+#'    potential mediators, even -- particularly -- if they are significant.
+#' 4. Exploratory descriptive analysis. Different models will answer different
+#'    questions. The danger with these analyses that their estimated 
+#'    coefficients are often misinterpreted as suggesting a causal effect
+#'    even though there is no reason to trust their validity.
 #'
+#' ==== The principle of marginality ====
+#' 
+#' An important principle in simplifying a model is that -- unless you know
+#' exactly why and can justify in detail -- it is never permissible to 
+#' remove a term that is __marginal__ to other terms that are left in the
+#' model, in the sense that the term occurs in a higher order interaction or
+#' is included in higher power of a polynomial.  In this context the 
+#' intercept term is considered marginal to all other terms. 
+#' 
+#' In R, it isn't too difficult to avoid models that 'obey the 
+#' principle of marginality' because the usual model formulas expand to 
+#' include all the necessary marginal terms. For example:
+#' 
+#' <tt> y ~ a * b</tt>
+#' 
+#' is, actually,
+#' 
+#' <tt> y ~ 1 + a + b + a * b</tt>
+#' 
+#' If you wanted to have an interaction term without main effects or intercept
+#' you would need to use the notation:
+#' 
+#' <tt> y ~ a:b - 1 </tt>
+#' 
+#' "a:b" generates the interaction term without also generating the main effecta
+#' of a and b. It does generate and intercept which you can remove (although
+#' you almost never want to) with "- 1".
+#' 
+#' Similarly, <tt>y ~ a * b * c</tt> generates all include 2-way interactions,
+#' main effects and the intercept.
+#' 
+#' In models with interactions and or with categorical variables, it is vital
+#' for a good analyst to understand the precise interpretation of all
+#' coefficients and to know how to generate linear hypotheses to investigate
+#' any question that can be investigated with linear hypostheses.
+#' 
+#' A common 'textbook' approach is to simplify the model by dropping more
+#' 'complex' terms, namely higher order interactions and/or terms including
+#' a particular predictor.  For example, dropping all terms that include 
+#' 'type' would not violate the principle of marginality, nor would dropping
+#' all 2- and higher-way interactions that include 'type'. Dropping all
+#' three-way interactions or dropping all interactions would not violate the 
+#' principle of marginality. 
+#' 
+#' An important corollary to the principle of marginality is that the 
+#' p-value of a mariginal term only relates to the specific interpretation
+#' of that term. For example the p-value of $x$ in a quadratic model 
+#' <tt>y ~ x + I(x^2)</tt> is only relevant to the slope of the quadratic
+#' at the origin and says nothing about the slope with respect to $x$ generally.
+#' In fact, both coefficients, that for $x$ and for $x^2$, could be not 
+#' significant, yet the slope with respect to $x$ for some values of $x$ be
+#' highly significant.
+#' 
+#' Another important principle could be called the __multiplicity__ principle.
+#' You can't drop more than one term at a time on the basis
+#' of its low significance. If you want to drop a block of terms you need
+#' to test those terms simultaneous as a block. You can't rely on ordinary
+#' regression output.
+#' 
+#' A related principle is that, when you have a categorical
+#' variable with three or more factors, you can't drop a single coding variable
+#' without knowing exactly what you are testing.  For example, a three-level 
+#' factor could have both dummy terms not significant (meaning that neither
+#' is significantly different from the reference level), yet the two coded levels
+#' could be highly significantly different from each other. Consider what might
+#' happen if the reference level has relatively few observations.
+#' 
+#' Many principles in inference are instances of the 
+#' __principle of invariance__, succinctly: things that
+#' shouldn't matter shouldn't matter. In the case of marginality with, for example,
+#' two interacting numeric variables, the interpretation of each main effect
+#' depends on the 'zero' of the scale for the other variable. Thus the interpretation
+#' of the coefficients for the main effects is not invariant with respect to a 
+#' location-scale transformation of the scale for the other variable. However,
+#' although the magnitude of the coefficient for the interaction will change with
+#' scale transformations of the two measurement scales, its p-value is
+#' invariant and, thus, has a meaning independent of the arbitrary choice of 
+#' scale (e.g feet or centimeters, degrees Celsius or degrees Kelvin), etc.
+#' 
+#' In the case of coding variables for a categorical variable with three or 
+#' more factors, the coding variables depend on the possibly arbitrary
+#' choice of reference level. 
+#' 
+#' Summarizing, you should **almost never**:
+#' 
+#' 1. drop term that is also included in a higher-order interaction that is also being dropped,
+#' 2. drop any term in a polynomial except the highest order terms,
+#' 3. the intercept which we can think of as being 'included' in all other terms.
+#' 
+#' There are very special situations where dropping the intercept may be justfied, for example
+#' if there are other variables that linearly span the intercept. In this case the intercept is
+#' in the model even if it doesn't appear explicitly. 
+#' 
+#' In many cases where the relationship between y and x necessarily goes through the origin,
+#' e.g. the relationship between height and weight of human subjects, it is unreasonable to
+#' force the model through the intercept because it is not reasonable to believe that the
+#' the form of the model would necessarily extrapolate to the intercept. Thus, omitting the
+#' intercept in the model will distort its fit over the relevant region of heights.
+#'    
+#' Most Wald test using regular expressions satisfy the principle of marginality.
+#' For example:
+#' 
 wald(fit3q, "2")   # are all quadratic terms jointly significant?
 wald(fit3q, ":")   # are all interaction terms jointly significant?
 wald(fit3q, ":.*:")   # are all 3-way interaction terms jointly significant?
-wald(fit3q, "education")   # are all 3-way interaction terms jointly significant?
-wald(fit3q, "women")   # are all 3-way interaction terms jointly significant?
-wald(fit3q, "type")   # are all 3-way interaction terms jointly significant?
+wald(fit3q, "education")   # are all terms involving education jointly significant?
+wald(fit3q, "women")   # are all terms involving women jointly significant?
+wald(fit3q, "type|women")   # are all involving type or women jointly significant?
 #'
 #'
 #' Some questions: Using this model:
@@ -670,10 +828,10 @@ wald(fit3q, "type")   # are all 3-way interaction terms jointly significant?
 #' 
 pred <- subset(Prestige, !is.na(type)) # drop occupations where type is NA
 # discretize gender
-(20 * round(pred$women/20)) %>% unique
-(20 * round(pred$women/20)) %>% tab
+(25 * round(pred$women/25)) %>% unique
+(25 * round(pred$women/25)) %>% tab
 pred$women.orig <- pred$women  # save original value because we're about to overwrite them
-pred$women <- 20 * round(pred$women/20)  # we need to overwrite to use the 'predict' function 
+pred$women <- 25 * round(pred$women/25)  # we need to overwrite to use the 'predict' function 
 pred$income.fit3 <- predict(fit3, newdata = pred) # predicted income using model fit3 
 
 xyplot( income.fit3 ~ education | type, pred, 
@@ -719,7 +877,7 @@ xyplot( income.fit3 ~ education | Type, pred,
 xyplot( income.fit3 ~ education | women, pred, groups = Type, 
         type = 'l',
         ylab = 'predicted income (Cdn $ in 1970)',
-        layout = c(1,6),
+        layout = c(5,1),
         auto.key = list( space='right', 
                          points = FALSE, lines = TRUE),
         scales = list(y=list(alternating=F)))
@@ -735,7 +893,7 @@ gd(col = c('blue','orange','dark green'), lty = 1, lwd = 2)
 xyplot( income.fit3 ~ education | Women, pred, groups = Type, 
         type = 'l',
         ylab = 'predicted income (Cdn $ in 1970)',
-        layout = c(1,6),
+        layout = c(5,1),
         auto.key = list( space='right', 
                          points = FALSE, lines = TRUE),
         scales = list(y=list(alternating=F)),
@@ -750,37 +908,130 @@ gd(col = c('blue','orange','dark green'), lty = 1, lwd = 3)
 xyplot( income.fit3 ~ education | Women, pred, groups = Type, 
         type = 'l',
         ylab = 'predicted income (Cdn $ in 1970)',
-        layout = c(1,6),
+        layout = c(5,1),
         auto.key = list( space='right', 
                          points = FALSE, lines = TRUE),
         scales = list(y=list(alternating=F)),
         as.table = TRUE)
-#'
-#' This presentation is not very effective because it is difficult to compare
-#' levels vertically. But we have too many levels to show them side by side
-#' vertically.
-#'
-xyplot( income.fit3 ~ education | Women, 
-        subset(pred, Women %in% c("0% women",'40% women','80% women')), 
-        groups = Type, 
-        type = 'l',
-        ylab = 'predicted income (Cdn $ in 1970)',
-        layout = c(3,1),
-        auto.key = list( space='top', 
-                         points = FALSE, lines = TRUE),
-        scales = list(y=list(alternating=F)),
-        as.table = TRUE)
-
-#'
-#' # What is the 'value' of an additional year of education?
+#' 
+#' 
 #' 
 #' ## Using GLH and graphs to probe complex questions (INCOMPLETE)
+#' 
+#' What we have done so far is to look at predicted income. We can also
+#' investigate deeper questions: What is the 'value' of an additional year of 
+#' education? In this case that is equivalent to estimating the **slope** or 
+#' **partial derivative** of expected income with respect to education.
+#' Since the model is quadratic in education, the slope will depend 
+#' linearly on education.
 #' 
 #' Using GLH we will be able to, among other things:
 #' 
 #' 1. put confidence bounds around the predicted values above
 #' 2. estimated the magnitude and significance of differences between types for various combinations of gender composition and education
 #' 3. estimate association between education and income for various combinations of gender and type
+#' 
+#' We use the "Lfx" function as discussed above and differentiate term by term with respect to education.
+#' 
+Led.deriv <- Lfx(fit3q,
+                 list( 0,
+                       0 * M(type),
+                       1 ,
+                       0 * women,
+                       2 * M(I(education)),
+                       0 * M(I(women^2)),
+                       1 * women,
+                       1 * M(type) * 1,
+                       0 * M(type) * women,
+                       2 * M(type) * M(I(education)),
+                       0 * M(type) * M(I(women^2)),
+                       1 * M(type) * 1 * women ),
+                 pred)
+ed.deriv <- walddf(fit3q, Led.deriv, data = pred)
+dim(Led.deriv)
+dim(ed.deriv)
+head(ed.deriv)
+gd(5, lty = 1, lwd = 3)
+xyplot( coef ~ education | type, ed.deriv, groups = women, type = 'l',
+        ylab = 'slope of income wrt education', auto.key =T)
+xyplot( coef ~ education | type, ed.deriv, groups = women, type = 'l',
+        ylab = 'slope of income wrt education',
+        layout = c(1,3), 
+        auto.key = list(space = 'right',lines=T,points=F,title = "% women")) +
+  layer(panel.abline(h=0))
+
+xyplot( coef ~ education | type, ed.deriv, groups = women, type = 'l',
+        ylab = 'slope of income wrt education',
+        layout = c(1,3), subscripts = T,
+        fit = ed.deriv$coef, upper = ed.deriv$U2, lower = ed.deriv$L2,
+        auto.key = list(space = 'right',lines=T,points=F,title = "% women")) +
+  glayer(gpanel.fit(...))+
+  layer(panel.abline(h=0))
+
+ed.deriv$Women <- factor(paste0(ed.deriv$women,"% women"))
+ed.deriv$Women <- with(ed.deriv, reorder(Women, women))
+ed.deriv$Type <- with(ed.deriv, reorder(type, education))
+p <- xyplot( coef ~ education | Women * Type, ed.deriv, type = 'l',
+        ylab = 'slope of income wrt education',
+          subscripts = T,
+        fit = ed.deriv$coef, upper = ed.deriv$U2, lower = ed.deriv$L2) +
+  layer(gpanel.fit(...))+
+  layer(panel.abline(h=0))
+(p2 <- update(p, ylim = c(-2000,6000)))
+useOuterStrips(p2)
+xyplot( coef + U2 +L2 ~ education | Women *Type, ed.deriv, type = 'p')
+
+#'
+#' The jaggedness of the confidence bands is due to the sparseness of data
+#' for some combinations.
+predf <- fillin(pred, ~ education + women + type)
+dim(pred)
+dim(predf)
+head(predf)
+densityplot(~ education | Women * Type, pred)
+densityplot(~ education | women * type, predf)
+
+Led.derivf <- Lfx(fit3q,
+                 list( 0,
+                       0 * M(type),
+                       1 ,
+                       0 * women,
+                       2 * M(I(education)),
+                       0 * M(I(women^2)),
+                       1 * women,
+                       1 * M(type) * 1,
+                       0 * M(type) * women,
+                       2 * M(type) * M(I(education)),
+                       0 * M(type) * M(I(women^2)),
+                       1 * M(type) * 1 * women ),
+                 predf)
+ed.derivf <- walddf(fit3q, Led.derivf, data = predf)
+dim(ed.derivf)
+ed.derivf <- sortdf(ed.derivf, ~ education)
+ed.derivf$Women <- factor(paste0(ed.derivf$women,"% women"))
+ed.derivf$Women <- with(ed.derivf, reorder(Women, women))
+ed.derivf$Type <- with(ed.derivf, reorder(type, education))
+p <- xyplot( coef ~ education | Women * Type, ed.derivf, type = 'l',
+             ylab = 'slope of income wrt education',
+             subscripts = T,
+             fit = ed.derivf$coef, upper = ed.derivf$U2, lower = ed.derivf$L2) +
+  layer(gpanel.fit(...))+
+  layer(panel.abline(h=0))
+p
+(p2 <- update(p, ylim = c(-3000,6000)))
+gd_(lwd=2,col.line='black',lty=2)
+useOuterStrips(p2)
+#'
+#' This illustrates how, with a model that has a large number of parameters and
+#' relatively little data (the data/parameter ratio is 98/12 = 8 which, in 
+#' many areas of application is considered much too small) the estimates
+#' have very little precision. 
+#'
+#' # Exercise:
+#' 
+#' Modify the model in a way that seems appropriate to you and re-estimate the
+#' the association between income and education. What happens to the precision
+#' of estimates?
 #' 
 #' # Some R Markdown examples (This is a level 1 heading)
 #' 

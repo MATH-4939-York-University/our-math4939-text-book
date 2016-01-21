@@ -42,5 +42,9 @@
 #' 
 #' 1. [Selected Warwick Exercises](Selected_Warwick_Exercises.html)
 #' 2. [General Parametric Splines](Part%205%20General%20Parametric%20Splines-notes%202014%2011%2005.pdf)
-#'         
+#' 3. [R Traps and Pitfalls](http://scs.math.yorku.ca/index.php/R/Traps_and_pitfalls)
+#'       -   Most of R's problems come from the fact that it tries to do too much. But would you want it to do less?
+#' 4. [Quick useful R recipes](http://capstone.stats.yorku.ca/index.php/R_Recipes)  (on our wiki so it's easy to add to them)
+#' 
+#'           
 

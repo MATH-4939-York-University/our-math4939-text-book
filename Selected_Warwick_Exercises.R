@@ -17,6 +17,10 @@ cp <- function(n) {
 cp(38)
 cp(100)
 cp(500) # why? how could we improve this
+#'
+#' The approach we used might have bad numerical properties. Why? How could we improve
+#' it?
+#'
 #' 
 #' ## Exercise 2.5 a
 #' 
