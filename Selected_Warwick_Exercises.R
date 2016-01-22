@@ -55,7 +55,7 @@ sol <- function(x) {
 sol(c(7,-1,-3,5,17))
 
 #'
-#' Exercise 2.8 c
+#' ##Exercise 2.8 c
 #'
 dsum <- function(n) {
   isum <- function(i) {
