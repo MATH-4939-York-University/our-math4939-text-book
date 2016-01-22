@@ -66,3 +66,20 @@ dsum <- function(n) {
 }
 dsum(10)
 
+#'
+#' ## Exercise 3.1 a,b
+#' 
+tmpFn1 <- function(xVec)
+{xVec^(1:length(xVec))}
+tmpFn1(1:5)
+
+tmpFn2 <- function(xVec)
+{(xVec^(1:length(xVec)))/(1:length(xVec))}
+tmpFn2(1:5)
+
+#' JLee
+
+
+
+
+
