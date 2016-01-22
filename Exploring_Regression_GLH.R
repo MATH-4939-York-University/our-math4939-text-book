@@ -984,7 +984,7 @@ xyplot( coef + U2 +L2 ~ education | Women *Type, ed.deriv, type = 'p')
 #'
 #' The jaggedness of the confidence bands is due to the sparseness of data
 #' for some combinations.
-predf <- fillin(pred, ~ education + women + type)
+predf <- fillin(pred, ~ education + women + type, xpd = 1.5)
 dim(pred)
 dim(predf)
 head(predf)
@@ -1018,16 +1018,16 @@ p <- xyplot( coef ~ education | Women * Type, ed.derivf, type = 'l',
   layer(gpanel.fit(...))+
   layer(panel.abline(h=0))
 p
-(p2 <- update(p, ylim = c(-3000,6000)))
-gd_(lwd=2,col.line='black',lty=2)
+(p2 <- update(p, ylim = c(-4000,6000), xlim = c(6,16)))
+gd_(lwd=2,col.line='black',lty=1)
 useOuterStrips(p2)
-#'
+(#')
 #' This illustrates how, with a model that has a large number of parameters and
 #' relatively little data (the data/parameter ratio is 98/12 = 8 which, in 
 #' many areas of application is considered much too small) the estimates
 #' have very little precision. 
 #'
-#' # Exercise:
+#' # Exercises
 #' 
 #' Modify the model in a way that seems appropriate to you and re-estimate the
 #' the association between income and education. What happens to the precision
