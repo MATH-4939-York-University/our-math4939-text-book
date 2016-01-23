@@ -1021,7 +1021,7 @@ p
 (p2 <- update(p, ylim = c(-4000,6000), xlim = c(6,16)))
 gd_(lwd=2,col.line='black',lty=1)
 useOuterStrips(p2)
-(#')
+#'
 #' This illustrates how, with a model that has a large number of parameters and
 #' relatively little data (the data/parameter ratio is 98/12 = 8 which, in 
 #' many areas of application is considered much too small) the estimates
