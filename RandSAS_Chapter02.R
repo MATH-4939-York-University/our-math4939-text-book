@@ -191,6 +191,7 @@ merge(z1, z2, all = T)
 sortdf( zd, ~ a)
 sortdf( zd, ~ a/x) # sort by a, then by x
 #'
+#'
 #' ## 2.3.12 Summarizing and expanding data sets (the missing section)
 #'
 #' The examples section, 2.6.3 discusses the 'tally' function in the 'mosaic' package.
@@ -292,7 +293,194 @@ hs.us <- up(hs, ~ school, all = T)
 #' Note that this returns modes for categorical variables, which is not
 #' generally very useful.
 #' 
+#+ include=FALSE
+## 2.3.14 Working with categorical data -------------------------------------------------
+#'
+#' ## 2.3.14 Working with categorical data
+#'
+#' To use this section, please make sure you have an up-to-date version of the 'yscs' package:
+#' 
+# devtools::install_github('gmonette/yscs')
+#' 
+#' We apply methods in the previous section to the manipulation of 
+#' categorical data sets.
+#' 
+#' A categorical data set consists of cases each of which is classified 
+#' according to a number of
+#' categorical variables. 
+#' 
+#' There are three main forms for storing 
+#' categorical data. It's useful to know how to go
+#' from one form to the other because different procedures
+#' work best on different forms.
+#' 
+#' We'll use the 'HairEyeColor' table in the 'datasets' 
+#' package which is loaded automatically with R.
+#' 
+#' The three forms in R are:
+#' 
+#' 1. table: useful for tabular displays and for some graphics displays such as mosaicplots in, e.g., the 'vcd' package
+#' 2. raw data frame with one row per case: useful for logistic regression for example.
+#' 3. weighted data frame with one row per combination of levels of the categorical variable, plus a frequency variable that contains the frequency of that combination: useful for Poisson regression when appropriate (quite rarely)
+#' 
+#' We can also use related structures for summaries of categorical data sets. 
+#' For example;
+#' 
+#' 1. tables of row of column percentages for tabular displays
+#' 2. a data frame with conditional percentages, i.e. percentage distribution of some combinations of variables conditional on values of other variables: useful for graphical displays
+#' 
+#' In R, it easy to go from one form to the other. Some
+#' functions in the 'yscs' package are designed to work
+#' smoothly with other R functions to make this work well.
+#' 
+#' ### Table form
+#' 
+#' The 'HairEyeColor' data set happens to come in the form of a 3-way table:
+HairEyeColor
+#' This is a 3-dimensional array:
+dim(HairEyeColor)
+#' but it also has the 'table' class:
+class(HairEyeColor)
+#' If it didn't have the 'table' class, you can turn an array or matrix into a 'table' with 'as.table'. If you use 'as.table' with something that's already a table, nothing happens so no harm is done:
+HairEyeColor <- as.table(HairEyeColor)
+#' The class of 'HairEyeColor' means
+#' that some generic functions have 
+#' special methods for it. For example 'plot' produces
+#' a 'mosaic' plot:
+plot(HairEyeColor)
+#' The default mosaic plot is, generally, not very useful.
+#' The 'mosaic' function in the 'vcd' package produces 
+#' a different mosaic plot:
+library(vcd)
+mosaic(HairEyeColor)
+mosaic(HairEyeColor,shade=T)
+mosaic(aperm(HairEyeColor, c(3,1,2)),shade=T)
+#' This is much more useful for exploratory analysis than for displays intended for a lay audience.
+#' 
+#' The 'tab' function in the 'yscs' package will add total margins to the table:
+library(yscs)
+tab(HairEyeColor)
+#' or it can be used to produce row, colum or panel percentages or proportions:
+tab(HairEyeColor, pct = 1)
+library(magrittr)
+tab(HairEyeColor, pct = 1) %>% round(1)
+tab(HairEyeColor, pct = c(1,3)) %>% round(1)
+tab(HairEyeColor, pct = c(2,3)) %>% round(1)
+#' for proportions:
+tab(HairEyeColor, pr = c(2,3)) %>% round(3)
+#'
+#' ### Weighted data frame
+#'
+#' A weighted data frame contains possible combinations
+#' of the categorical variables together with a 'Freq' variable showing the number of occurences of that combination. We can transform a 'table' object to a weighted data
+#' frame easily with:
+#' 
+HairEyeColor
+hec.wdf <- as.data.frame(HairEyeColor) 
+dim(hec.wdf)
+head(hec.wdf)
+tail(hec.wdf)
+xqplot(hec.wdf)
+#' You could use this data set for a Poisson regression or for a loglinear model 
+#' although make sure that
+#' the assumptions of independence are reasonable with your data. Also it is rare 
+#' that the Poisson model answers relevant questions directly.
+#'
+#' You can also use the weighted data frame for plotting but, again, be aware
+#' that the raw frequencies are rarely of substantive interest. Generally, selected
+#' conditional relative frequencies are of interest. We will see how to obtain these
+#' below.
+#' 
+#' ### Raw data frame
+#' 
+#' We can produce a raw data frame with one row per case by replicating rows
+#' of the weighted data frame:
+#' 
+hec.raw <- hec.wdf[rep(1:nrow(hec.wdf), hec.wdf$Freq),]
+hec.raw$Freq <- NULL
+dim(hec.raw)
+head(hec.raw)
+tail(hec.raw)
+xqplot(hec.raw)
+#' 
+#' ### A cycle of transformations
+#' 
+#' With a full cycle of transformations, we can tranform data from any of these three forms to the other.
+#' 
+#' #### Table to weighted data frame
+#' 
+HairEyeColor <- as.table(HairEyeColor)    # make sure it's a table
+hec.wdf <- as.data.frame(HairEyeColor)
+head(hec.wdf)
+#'
+#' #### Weighted data frame to raw data frame
+#' 
+hec.raw <- hec.wdf[ rep(1:nrow(hec.wdf), hec.wdf$Freq),]
+hec.raw$Freq <- NULL
+head(hec.raw)
+#'
+#' #### Raw data frame to table
+#' 
+library(yscs)  
+zt <- Tab(hec.raw) # you can also use the 'table' function in the 'base' package
+zt     
+all.equal(zt, HairEyeColor)  # we've come full circle
+#'
+#' #### Weighted data frame to table
+#' 
+library(yscs) # for the "Tab" function
+head(hec.wdf)
+zt <- Tab( Freq ~ Hair + Eye + Sex, hec.wdf)
+zt
+all.equal(zt, HairEyeColor) 
+#'
+#' #### Raw data frame to weighted data frame
+#'
+#' This is not efficient but included for illustration
+#' 
+library(yscs) # for the 'up' and the 'capply' functions
+zt <- hec.raw
+head(zt)
+zt$Freq <- with(zt, capply(1:nrow(zt), list(Hair,Eye,Sex), length))
+head(zt)
+zwt <- up(zt, ~ Hair/Eye/Sex) # keeps one row for each combination of Hair/Eye/Sex
+head(zwt)
+#' 
+#' ## Summarizing categorical data
+#' 
+#' The 'tab' function the 'yscs' package can be used to produce joint or conditional
+#' proportions or percentages. 
+#' 
+#' Using the raw data, to get the conditional distribution of hair color given
+#' eye color, marginalizing over sex:
+tab(~ Hair + Eye, hec.raw, pct = 2) # condition on the second variable in the list
+zzt <- tab(~ Hair + Eye, hec.raw, pct = 2, test = T)
+zzt
+unclass(zzt) # to see the 'test' attribute
+#' 
+#' Condition on Sex
+#' 
+tab( ~ Hair + Eye + Sex, hec.raw, pct = 3)
+#'
+#' Let's plot percent of various hair colors dependent on eye color and sex
+#' 
+zt <- Tab( ~ Hair + Eye + Sex, hec.raw, pct = 2:3) # we use "Tab" to avoid totals
+zdf <- as.data.frame(zt)
+head(zdf) # the variable labelled 'Freq' is really a conditional proportion 
+library(lattice)
+gd(3)
+#+ fig.height=8,fig.width=10
+xyplot( Freq ~ Hair | Eye, zdf, groups = Sex, type = 'b', auto.key = T)
+gd(4)
+xyplot( Freq ~ Hair | paste0("Eye: ",Eye), subset(zdf, Eye != "All"), groups = Sex, type = 'b', auto.key = T,
+        sub = "percent of each hair colour by eye colour and sex",
+        ylab = 'percent')
+#' 
+#' You can explore this data to ask whether eye colour as shown in this sample
+#' appears to sex linked.
+#'
 #' ## Exercises
 #' 
 #' Practice all of these techniques as you explore the 'Arrests' data set in the 'effects' package.
+#' 
 #' 

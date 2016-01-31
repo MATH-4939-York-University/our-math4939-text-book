@@ -30,8 +30,9 @@
 #' - 'anova' for a likelihood ratio test of two models
 #' - 'Anova' (in the 'car' package) sums of squares: Type I, Type II and Type III and their use and interpretation
 #' 
-#+ setup, include=FALSE}
+#+ setup, include=FALSE
 ## read data and set up libraries
+library(latticeExtra)
 library(knitr)
 opts_chunk$set(cache=FALSE,message=FALSE,comment="|  ")    # for information see http://yihui.name/knitr/options#chunk_options
 if(!file.exists("Smoking3.csv")) download.file("http://blackwell.math.yorku.ca/Data/Smoking/Smoking3.csv","Smoking3.csv")
