@@ -25,8 +25,7 @@ cp(500) # why? how could we improve this
 #'
 #' ## Exercise 2.1 a
 #' 
-install.packages('matrixcalc')
-require(matrixcalc)
+if(!require(matrixcalc)) install.packages('matrixcalc')
 A <- matrix(c(1, 5, -2, 1, 2, -1, 3, 6, -3), nrow=3)
 print(A)
 matrix.power(A,3)
