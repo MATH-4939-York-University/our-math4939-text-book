@@ -30,7 +30,11 @@
 #' ## Chapter 2: The Meaning of Regression
 #' 
 #' 1. [Visualizing Regression Part I: Simple Regression](Visualizing_Regression-I-Simple.pdf) 
-#' 2. [Visualizing Regression Part II: Multiple Regression](Visualizing_Regression-II-Multiple.pdf) 
+#' 2. [Visualizing Regression Part II: Multiple Regression](Visualizing_Regression-II-Multiple.pdf)
+#' 
+#' ## Chapter 3: Wrangling Data
+#' 
+#' 1. [Transforming Messy Spreadsheets into Useable Data](Messy_data.html) ***|*** [R Script](Messy_data.R)
 #' 
 #' ## Appendix 1: Comments on R and SAS textbook
 #' 
@@ -46,5 +50,9 @@
 #'       -   Most of R's problems come from the fact that it tries to do too much. But would you want it to do less?
 #' 4. [Quick useful R recipes](http://capstone.stats.yorku.ca/index.php/R_Recipes)  (on our wiki so it's easy to add to them)
 #' 
-#'           
+#' <!--- TO ADD:
+#' Comments on Assignment 2.R
+#' --->
+#'     
+#'                 
 
